@@ -1,5 +1,6 @@
 <script setup>
     import { ref, watch } from 'vue';
+    import LoadingPokemon from './LoadingPokemon.vue';
 
     const props = defineProps(["pokemonName"]);
 
@@ -7,9 +8,13 @@
     const searching = ref(false);
     const errorOccurred = ref(false);
     const invalidPokemon = ref(false);
+    const pokemonImgLoaded = ref(false);
+
+    const imageLoadComplete = () => pokemonImgLoaded.value = true;
 
     watch(()=>props.pokemonName, async ()=>{
         searching.value = true;
+        pokemonImgLoaded.value = false;
         response.value = await getPokemon(props.pokemonName);
         searching.value = false;
     });
@@ -23,21 +28,23 @@
     }
 
     response.value = await getPokemon(props.pokemonName);
-    
+
 </script>
 
 <template>
-    <div v-if="searching">
-        Loading...
-    </div>
-    <div v-else-if="invalidPokemon">
+    <div v-if="invalidPokemon">
         Invalid Pokémon 🧐
     </div>
     <div v-else-if="errorOccurred">
         Some error occured
     </div>
     <div v-else>
-        <img :src="response.sprites.other['official-artwork'].front_default"><br/>
+        <div v-show="pokemonImgLoaded">
+            <img :src="response.sprites.other['official-artwork'].front_default" @load="imageLoadComplete"><br/>
+        </div>
+        <div v-show="!pokemonImgLoaded">
+            <LoadingPokemon height="475px"/>
+        </div>
         Name: {{response.name}}<br/>
         Height: {{response.height}}dm<br/>
         Weight: {{response.weight}}hg<br/>
